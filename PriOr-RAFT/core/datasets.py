@@ -18,6 +18,10 @@ from core.utils import frame_utils
 from core.utils.augmentor import FlowAugmentor, SparseFlowAugmentor, FlowAugmentor_360, SparseFlowAugmentor_360
 
 
+def _dataset_root(env_name, default_root):
+    return os.environ.get(env_name, default_root)
+
+
 class FlowDataset(data.Dataset):
     def __init__(self, aug_params=None, sparse=False):
         self.augmentor = None
@@ -193,7 +197,8 @@ class Flow360(FlowDataset_360):
 
 # 2023_T-ITS_PanoFlow
 class FlowScape(FlowDataset_360):
-    def __init__(self, aug_params=None, split='train', root='/data/lll/dataset/Flow_dataset/FlowScape', scene='all'):
+    def __init__(self, aug_params=None, split='train', root=None, scene='all'):
+        root = root or _dataset_root('PRIORFLOW_FLOWSCAPE_ROOT', '/data/lll/dataset/Flow_dataset/FlowScape')
         super(FlowScape, self).__init__(aug_params, root=root)
         assert split in ['train', 'test']
         assert scene in ['cloud', 'fog', 'rain', 'sunny', 'all'], f'Invalid scene: {scene}'
@@ -220,7 +225,8 @@ class FlowScape(FlowDataset_360):
 
 # 2022_ECCV_MPFDataset
 class MPFDataset(FlowDataset_360):
-    def __init__(self, aug_params=None, split='train', root='/data/lll/dataset/Flow_dataset/ECCV2022MPF-net_dataset', scene='all'):
+    def __init__(self, aug_params=None, split='train', root=None, scene='all'):
+        root = root or _dataset_root('PRIORFLOW_MPFDATASET_ROOT', '/data/lll/dataset/Flow_dataset/ECCV2022MPF-net_dataset')
         super(MPFDataset, self).__init__(aug_params, root=root)
         assert split in ['train', 'val', 'test']
         assert osp.isdir(root)

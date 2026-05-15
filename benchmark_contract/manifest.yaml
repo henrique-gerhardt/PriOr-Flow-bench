@@ -1,0 +1,35 @@
+contract_version: 1.0
+method_name: prior-flow
+method_family: orthogonal-view-panoramic-optical-flow
+paper_year: 2025
+framework: pytorch
+supports_gpu: true
+project_root_hint: /app
+method_entry_root_hint: /app/PriOr-RAFT
+
+input_format:
+  image_layout: erp
+  tensor_shape: [B, C, H, W]
+  image_channels: 3
+  image_dtype: float32
+
+output_format:
+  flow_layout: erp
+  flow_tensor_shape: [B, 2, H, W]
+  flow_dtype: float32
+
+datasets_supported:
+  - flowscape
+  - mpfdataset
+  - omniphotos
+  - odvista
+
+checkpoints:
+  default: /app/PriOr-RAFT/checkpoints/FlowScape/FlowScape-final.pth
+  cache_default: /data/checkpoints/priorflow/FlowScape-final.pth
+
+scenarios_supported:
+  - official_reproduction
+  - standardized_efficiency
+  - regional_robustness
+

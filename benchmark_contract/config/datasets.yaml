@@ -1,0 +1,51 @@
+default_dataset: flowscape
+
+datasets:
+  flowscape:
+    root: /data/FlowScape
+    scene: sunny
+    split: test
+    expected_layout:
+      - Flow360/test/sunny/img
+      - Flow360/test/sunny/flow
+    download:
+      provider: google_drive
+      file_id: 1cKJZBRprwS6fu6Nf4U0eU6lkqB88tW_v
+      url: https://drive.google.com/file/d/1cKJZBRprwS6fu6Nf4U0eU6lkqB88tW_v/view?usp=sharing
+      cache_path: /data/downloads/FlowScape.zip
+      extract: true
+    notes: "Default benchmark target. PriOr-RAFT expects root/Flow360/<split>/<scene>/{img,flow}."
+
+  mpfdataset:
+    root: /data/MPFDataset
+    scene: EFT
+    split: test
+    expected_layout:
+      - EFTs_Car100/image
+      - EFTs_Car100/flow
+    download:
+      provider: manual
+      url: https://github.com/HenryLee0314/ECCV2022-MPF-net
+      extract: false
+    notes: "Configurable but not downloaded by default because the official data link is OneDrive."
+
+  omniphotos:
+    root: /data/OmniPhotos
+    scene: default
+    split: eval
+    download:
+      provider: manual
+      url: https://github.com/cr333/OmniPhotos
+      extract: false
+    notes: "Qualitative/generalization dataset; not part of default metric reproduction."
+
+  odvista:
+    root: /data/ODVista
+    scene: default
+    split: test
+    download:
+      provider: manual
+      url: https://github.com/Omnidirectional-video-group/ODVista
+      extract: false
+    notes: "Qualitative/generalization dataset; ODVista is distributed through gsutil."
+

@@ -417,7 +417,7 @@ if __name__ == '__main__':
         if args.dataset == 'MPFDataset':
             assert args.scene in ['City', 'EFT', 'all']
             if args.regions:
-                validate_MPF_regions(model)
+                validate_MPF_regions(model, scene=args.scene)
             else:
                 validate_MPF(model, scene=args.scene)
         

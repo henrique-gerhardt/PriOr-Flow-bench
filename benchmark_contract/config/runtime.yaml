@@ -1,0 +1,34 @@
+device: cuda
+batch_size: 1
+precision: fp32
+num_workers: 2
+warmup_runs: 10
+measured_runs: 50
+inference_iters: 12
+save_predictions: false
+profile_memory: true
+profile_flops: false
+allow_null_flops: true
+allow_null_parameters: false
+download_assets: true
+
+standardized_efficiency:
+  input_height: 512
+  input_width: 1024
+  normalize_input: true
+  resize_policy: synthetic_erp
+
+official_reproduction:
+  use_official_resolution: true
+  use_official_dataset_loader: true
+
+regional_robustness:
+  polar_threshold_deg: 60
+  latitude_bins:
+    - [-90, -60]
+    - [-60, -30]
+    - [-30, 0]
+    - [0, 30]
+    - [30, 60]
+    - [60, 90]
+

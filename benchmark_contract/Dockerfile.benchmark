@@ -1,0 +1,38 @@
+FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    PRIORFLOW_FLOWSCAPE_ROOT=/data/FlowScape \
+    PRIORFLOW_MPFDATASET_ROOT=/data/MPFDataset
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    build-essential \
+    ca-certificates \
+    curl \
+    git \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    p7zip-full \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . /app
+
+RUN conda install -y python=3.8 pytorch=1.12.1 torchvision=0.13.1 torchaudio=0.12.1 cudatoolkit=11.3 -c pytorch -c nvidia && \
+    conda clean -ya && \
+    python -c "import sys; assert sys.version_info[:2] == (3, 8), sys.version" && \
+    python -m pip install --upgrade pip setuptools wheel && \
+    python -m pip install -r /app/benchmark_contract/requirements-benchmark.txt
+
+RUN chmod +x /app/benchmark_contract/entrypoint.sh
+
+ENTRYPOINT ["/bin/bash"]
