@@ -1,4 +1,4 @@
-default_dataset: flowscape
+default_dataset: mpfdataset
 
 datasets:
   flowscape:
@@ -14,6 +14,9 @@ datasets:
       url: https://drive.google.com/file/d/1cKJZBRprwS6fu6Nf4U0eU6lkqB88tW_v/view?usp=sharing
       cache_path: /data/downloads/FlowScape.zip
       extract: true
+      manual_alternates:
+        - https://github.com/MasterHow/PanoFlow#flowscape-flow360-dataset
+        - https://drive.google.com/uc?id=1cKJZBRprwS6fu6Nf4U0eU6lkqB88tW_v
     notes: "Default benchmark target. PriOr-RAFT expects root/Flow360/<split>/<scene>/{img,flow}."
 
   mpfdataset:
@@ -26,8 +29,12 @@ datasets:
     download:
       provider: manual
       url: https://github.com/HenryLee0314/ECCV2022-MPF-net
-      extract: false
-    notes: "Configurable but not downloaded by default because the official data link is OneDrive."
+      cache_path: /data/downloads/MPFDataset.zip
+      extract: true
+      manual_alternates:
+        - https://github.com/HenryLee0314/ECCV2022-MPF-net
+        - https://1drv.ms/f/s!Al4FLTWGYZdrjzOxjBwW_bJUt05T
+    notes: "Default fallback benchmark target. Official dataset distribution is a OneDrive folder, so mount/download the archive manually."
 
   omniphotos:
     root: /data/OmniPhotos
@@ -48,4 +55,3 @@ datasets:
       url: https://github.com/Omnidirectional-video-group/ODVista
       extract: false
     notes: "Qualitative/generalization dataset; ODVista is distributed through gsutil."
-

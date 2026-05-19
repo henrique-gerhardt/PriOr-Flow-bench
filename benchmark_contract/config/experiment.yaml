@@ -1,34 +1,33 @@
 scenario: official_reproduction
-dataset: flowscape
-dataset_label: FlowScape
-scene: sunny
-checkpoint: /app/PriOr-RAFT/checkpoints/FlowScape/FlowScape-final.pth
-checkpoint_cache: /data/checkpoints/priorflow/FlowScape-final.pth
+dataset: mpfdataset
+dataset_label: MPFDataset
+scene: EFT
+checkpoint: /app/PriOr-RAFT/checkpoints/EFT/EFT-final.pth
+checkpoint_cache: /data/checkpoints/priorflow/EFT-final.pth
 method_root: /app/PriOr-RAFT
 
 checkpoint_download:
   provider: google_drive
-  file_id: 1xP9tONXOiQelYtNJbgxml4PafenCWVeq
-  url: https://drive.google.com/file/d/1xP9tONXOiQelYtNJbgxml4PafenCWVeq/view?usp=drive_link
+  file_id: 1QJuBMlPR1IZsqf__SO9E5YIxGKPKanC6
+  url: https://drive.google.com/file/d/1QJuBMlPR1IZsqf__SO9E5YIxGKPKanC6/view?usp=drive_link
 
 official_command:
   script: evaluate.py
   args:
     - --model
-    - /app/PriOr-RAFT/checkpoints/FlowScape/FlowScape-final.pth
+    - /app/PriOr-RAFT/checkpoints/EFT/EFT-final.pth
     - --dataset
-    - FlowScape
+    - MPFDataset
     - --scene
-    - sunny
+    - EFT
 
 regional_command:
   script: evaluate.py
   args:
     - --model
-    - /app/PriOr-RAFT/checkpoints/FlowScape/FlowScape-final.pth
+    - /app/PriOr-RAFT/checkpoints/EFT/EFT-final.pth
     - --dataset
-    - FlowScape
+    - MPFDataset
     - --scene
-    - sunny
+    - EFT
     - --regions
-

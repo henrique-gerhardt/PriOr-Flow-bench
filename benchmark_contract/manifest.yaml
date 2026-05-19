@@ -25,11 +25,10 @@ datasets_supported:
   - odvista
 
 checkpoints:
-  default: /app/PriOr-RAFT/checkpoints/FlowScape/FlowScape-final.pth
-  cache_default: /data/checkpoints/priorflow/FlowScape-final.pth
+  default: /app/PriOr-RAFT/checkpoints/EFT/EFT-final.pth
+  cache_default: /data/checkpoints/priorflow/EFT-final.pth
 
 scenarios_supported:
   - official_reproduction
   - standardized_efficiency
   - regional_robustness
-

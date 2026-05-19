@@ -8,7 +8,7 @@ import sys
 import tarfile
 import zipfile
 from pathlib import Path
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List, Optional
 
 import yaml
 
@@ -31,14 +31,67 @@ def run_command(cmd, cwd: Optional[Path] = None) -> None:
     subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True)
 
 
-def download_google_drive(file_id: str, url: str, output: Path) -> None:
+def download_google_drive(file_id: str, url: str, output: Path, help_text: Optional[str] = None) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists() and output.stat().st_size > 0:
         print(f"Using cached download: {output}")
         return
     target = str(output)
     source = url or f"https://drive.google.com/uc?id={file_id}"
-    run_command(["gdown", "--fuzzy", source, "-O", target])
+    try:
+        run_command(["gdown", "--fuzzy", source, "-O", target])
+    except subprocess.CalledProcessError as exc:
+        if output.exists() and output.stat().st_size == 0:
+            output.unlink()
+        message = [
+            f"Google Drive download failed for {source}.",
+            "This usually means the file is no longer public, has exceeded quota, or gdown cannot resolve the confirmation URL.",
+        ]
+        if help_text:
+            message.append(help_text)
+        raise RuntimeError("\n".join(message)) from exc
+
+
+def existing_file(paths: Iterable[Path]) -> Optional[Path]:
+    for path in paths:
+        if path.exists() and path.is_file() and path.stat().st_size > 0:
+            return path
+    return None
+
+
+def archive_candidates(dataset_key: str, configured_archive: Path) -> List[Path]:
+    env_name = {
+        "flowscape": "PRIORFLOW_FLOWSCAPE_ARCHIVE",
+        "mpfdataset": "PRIORFLOW_MPFDATASET_ARCHIVE",
+    }.get(dataset_key)
+    candidates = []
+    if env_name and os.environ.get(env_name):
+        candidates.append(Path(os.environ[env_name]))
+    if os.environ.get("PRIORFLOW_DATASET_ARCHIVE"):
+        candidates.append(Path(os.environ["PRIORFLOW_DATASET_ARCHIVE"]))
+    candidates.append(configured_archive)
+    candidates.extend(sorted(configured_archive.parent.glob(f"{configured_archive.stem}.*")))
+    return candidates
+
+
+def dataset_download_help(dataset_key: str, root: Path, archive: Path, download: Dict) -> str:
+    alternates = download.get("manual_alternates") or []
+    lines = [
+        f"Dataset '{dataset_key}' is not ready at {root}.",
+        f"Recovery: download the dataset archive manually and place it at {archive},",
+        "or set PRIORFLOW_DATASET_ARCHIVE=/path/to/archive inside the container.",
+        "The container will extract and normalize it on the next run.",
+    ]
+    dataset_env = {
+        "flowscape": "PRIORFLOW_FLOWSCAPE_ARCHIVE",
+        "mpfdataset": "PRIORFLOW_MPFDATASET_ARCHIVE",
+    }.get(dataset_key)
+    if dataset_env:
+        lines.insert(3, f"For this dataset you can also set {dataset_env}=/path/to/archive.")
+    if alternates:
+        lines.append("Official mirror/reference links:")
+        lines.extend(f"- {item}" for item in alternates)
+    return "\n".join(lines)
 
 
 def clear_directory(path: Path) -> None:
@@ -104,7 +157,8 @@ def ensure_symlink_or_copy(source: Path, target: Path) -> None:
 
 def ensure_checkpoint(experiment: Dict) -> None:
     target = Path(experiment["checkpoint"])
-    cache = Path(experiment.get("checkpoint_cache") or target)
+    env_checkpoint = os.environ.get("PRIORFLOW_CHECKPOINT")
+    cache = Path(env_checkpoint or experiment.get("checkpoint_cache") or target)
     download = experiment.get("checkpoint_download") or {}
     if target.exists() and target.stat().st_size > 0:
         print(f"Checkpoint ready: {target}")
@@ -117,7 +171,11 @@ def ensure_checkpoint(experiment: Dict) -> None:
         raise FileNotFoundError(f"Checkpoint missing and PRIORFLOW_SKIP_DOWNLOAD=1: {target}")
     if download.get("provider") != "google_drive":
         raise RuntimeError(f"No automatic checkpoint downloader configured for {target}")
-    download_google_drive(download.get("file_id", ""), download.get("url", ""), cache)
+    help_text = (
+        f"Recovery: download the checkpoint manually and place it at {cache}, "
+        "or set PRIORFLOW_CHECKPOINT=/path/to/checkpoint inside the container."
+    )
+    download_google_drive(download.get("file_id", ""), download.get("url", ""), cache, help_text=help_text)
     ensure_symlink_or_copy(cache, target)
     print(f"Checkpoint ready: {target}")
 
@@ -139,10 +197,16 @@ def ensure_dataset(datasets_cfg: Dict, experiment: Dict) -> None:
     if os.environ.get("PRIORFLOW_SKIP_DOWNLOAD") == "1":
         raise FileNotFoundError(f"Dataset missing and PRIORFLOW_SKIP_DOWNLOAD=1: {root}")
     download = dataset_cfg.get("download") or {}
-    if download.get("provider") != "google_drive":
-        raise RuntimeError(f"No automatic downloader configured for dataset {dataset_key} at {root}")
     archive = Path(download.get("cache_path", f"/data/downloads/{dataset_key}.archive"))
-    download_google_drive(download.get("file_id", ""), download.get("url", ""), archive)
+    manual_archive = existing_file(archive_candidates(dataset_key, archive))
+    if manual_archive is not None:
+        archive = manual_archive
+        print(f"Using existing dataset archive: {archive}")
+    else:
+        help_text = dataset_download_help(dataset_key, root, archive, download)
+        if download.get("provider") != "google_drive":
+            raise RuntimeError(help_text)
+        download_google_drive(download.get("file_id", ""), download.get("url", ""), archive, help_text=help_text)
     if download.get("extract", True):
         extract_archive(archive, root)
     if expected_layout and not dataset_is_ready(root, expected_layout):

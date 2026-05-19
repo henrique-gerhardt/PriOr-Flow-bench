@@ -44,8 +44,40 @@ provide the GPU through NVIDIA Container Toolkit and `--gpus all`.
 
 Runtime downloads are cached in `/data`:
 
-- `/data/FlowScape` for the default FlowScape dataset.
-- `/data/checkpoints/priorflow/FlowScape-final.pth` for the PriOr-RAFT checkpoint.
+- `/data/MPFDataset` for the default MPFDataset/EFT reproduction dataset.
+- `/data/checkpoints/priorflow/EFT-final.pth` for the default PriOr-RAFT checkpoint.
+
+MPFDataset is now the default because FlowScape is often inaccessible through
+the public Google Drive link. Download the MPFDataset archive from the official
+project link listed at https://github.com/HenryLee0314/ECCV2022-MPF-net and
+place it in the data volume as `/data/downloads/MPFDataset.zip`. The next run
+will extract it to `/data/MPFDataset`.
+
+You can also point to a mounted archive explicitly:
+
+```bash
+podman run --rm --device nvidia.com/gpu=all \
+  -e PRIORFLOW_MPFDATASET_ARCHIVE=/data/downloads/<downloaded-archive> \
+  -v priorflow-data:/data \
+  -v priorflow-results:/app/benchmark_contract/results \
+  priorflow-benchmark ./benchmark_contract/entrypoint.sh official_reproduction
+```
+
+If you later want to use FlowScape, download the archive from one of the
+official PanoFlow mirrors listed at
+https://github.com/MasterHow/PanoFlow#flowscape-flow360-dataset and place it in
+the data volume as `/data/downloads/FlowScape.zip`. The next run will extract it
+to `/data/FlowScape`.
+
+FlowScape can also be specified explicitly:
+
+```bash
+podman run --rm --device nvidia.com/gpu=all \
+  -e PRIORFLOW_FLOWSCAPE_ARCHIVE=/data/downloads/<downloaded-archive> \
+  -v priorflow-data:/data \
+  -v priorflow-results:/app/benchmark_contract/results \
+  priorflow-benchmark ./benchmark_contract/entrypoint.sh official_reproduction
+```
 
 Set `PRIORFLOW_SKIP_DOWNLOAD=1` to require pre-mounted assets instead of
 downloading them.
